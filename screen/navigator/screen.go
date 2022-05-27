@@ -6,13 +6,16 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"log"
 	"nextcloud-passwords/api/ncpasswords/folder"
 	"nextcloud-passwords/api/ncpasswords/password"
+	"time"
 )
 
 type Navigator struct {
 	Folders   *[]folder.Folder
 	Passwords *[]password.Password
+	Loading   bool
 }
 
 const rootDir = "00000000-0000-0000-0000-000000000000"
@@ -25,7 +28,16 @@ func Initialize(app fyne.App, navigator *Navigator) fyne.Window {
 		Height: 480,
 	})
 
-	SwitchFolder(&window, rootDir, navigator)
+	// Wait for data in the background
+	go func() {
+		for range time.Tick(time.Millisecond * 100) {
+			if navigator.Loading == false {
+				log.Println("Switching folder")
+				SwitchFolder(&window, rootDir, navigator)
+				return
+			}
+		}
+	}()
 
 	return window
 }
