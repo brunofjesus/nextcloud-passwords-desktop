@@ -18,8 +18,7 @@ type Navigator struct {
 
 const rootDir = "00000000-0000-0000-0000-000000000000"
 
-func Initialize(app fyne.App, navigator Navigator) fyne.Window {
-
+func Initialize(app fyne.App, navigator *Navigator) fyne.Window {
 	window := app.NewWindow("Nextcloud Passwords")
 
 	window.Resize(fyne.Size{
@@ -32,7 +31,7 @@ func Initialize(app fyne.App, navigator Navigator) fyne.Window {
 	return window
 }
 
-func SwitchFolder(window *fyne.Window, folderId string, navigator Navigator) {
+func SwitchFolder(window *fyne.Window, folderId string, navigator *Navigator) {
 	list := createList(window, folderId, navigator)
 	breadcrumb := createBreadcrumb(folderId, navigator.Folders)
 
@@ -41,7 +40,7 @@ func SwitchFolder(window *fyne.Window, folderId string, navigator Navigator) {
 	(*window).SetContent(vbox)
 }
 
-func createList(window *fyne.Window, folderId string, navigator Navigator) *widget.List {
+func createList(window *fyne.Window, folderId string, navigator *Navigator) *widget.List {
 	folders, passwords := filter(folderId, navigator.Folders, navigator.Passwords)
 
 	list := widget.NewList(

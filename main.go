@@ -3,23 +3,16 @@ package main
 import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/theme"
-	"github.com/joho/godotenv"
 	"log"
-	"nextcloud-passwords/api/ncpasswords"
 	"nextcloud-passwords/api/ncpasswords/folder"
 	"nextcloud-passwords/api/ncpasswords/password"
+	"nextcloud-passwords/common/environment"
 	"nextcloud-passwords/screen/navigator"
-	"os"
 )
 
 func main() {
-	loadEnvFile()
-
-	credentials := ncpasswords.Credentials{
-		Username: os.Getenv("nc_username"),
-		Password: os.Getenv("nc_passwd"),
-		Url:      os.Getenv("nc_url"),
-	}
+	environment.LoadEnvironmentFile()
+	credentials := environment.GetNextCloudCredentials()
 
 	folders, err := folder.All(credentials)
 
@@ -36,13 +29,10 @@ func main() {
 	myApp := app.New()
 	myApp.Settings().SetTheme(theme.LightTheme())
 
-	navigator.Initialize(myApp, navigator.Navigator{Folders: &folders, Passwords: &passwords}).ShowAndRun()
-
-}
-
-func loadEnvFile() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Some error occured. Err: %s", err)
+	navigatorScreen := navigator.Navigator{
+		Folders:   &folders,
+		Passwords: &passwords,
 	}
+
+	navigator.Initialize(myApp, &navigatorScreen).ShowAndRun()
 }
