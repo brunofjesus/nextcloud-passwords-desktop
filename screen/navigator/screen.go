@@ -1,7 +1,6 @@
 package navigator
 
 import (
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
@@ -33,7 +32,13 @@ func Initialize(app fyne.App, navigator *Navigator) fyne.Window {
 
 func SwitchFolder(window *fyne.Window, folderId string, navigator *Navigator) {
 	list := createList(window, folderId, navigator)
-	breadcrumb := createBreadcrumb(folderId, navigator.Folders)
+	breadcrumb := createBreadcrumb(
+		folderId,
+		navigator.Folders,
+		func(btnFolderId string) {
+			SwitchFolder(window, btnFolderId, navigator)
+		},
+	)
 
 	vbox := container.New(layout.NewBorderLayout(breadcrumb, nil, nil, nil), breadcrumb, list)
 
@@ -48,9 +53,7 @@ func createList(window *fyne.Window, folderId string, navigator *Navigator) *wid
 			return len(*passwords) + len(*folders)
 		},
 		func() fyne.CanvasObject {
-			return widget.NewButtonWithIcon("template", theme.HomeIcon(), func() {
-				fmt.Println("Tapped")
-			})
+			return widget.NewButtonWithIcon("", nil, nil)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			button := o.(*widget.Button)

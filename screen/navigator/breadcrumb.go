@@ -1,7 +1,6 @@
 package navigator
 
 import (
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
@@ -10,43 +9,43 @@ import (
 	"nextcloud-passwords/api/ncpasswords/folder"
 )
 
-func createBreadcrumb(folderId string, folders *[]folder.Folder) *fyne.Container {
+type FnStringConsumer = func(string)
 
-	btnHome := widget.NewButtonWithIcon("", theme.HomeIcon(), func() {
-		fmt.Println("Tapped")
-	})
-	breadcrumb := container.New(layout.NewHBoxLayout(), btnHome)
+func createBreadcrumb(folderId string, folders *[]folder.Folder, changeFolderFn FnStringConsumer) *fyne.Container {
 
-	findAndAddFolders(folderId, folders, breadcrumb)
+	breadcrumb := container.New(layout.NewHBoxLayout())
+
+	pathFolders := findFolderPath(folderId, folders)
+	addFolderButtons(&pathFolders, breadcrumb, changeFolderFn)
 
 	breadcrumb.Add(layout.NewSpacer())
 
 	return breadcrumb
 }
 
-func findAndAddFolders(folderId string, folders *[]folder.Folder, container *fyne.Container) {
-	var buttons []*widget.Button
+func findFolderPath(folderId string, folders *[]folder.Folder) []*folder.Folder {
+	var breadcrumbFolders []*folder.Folder
 
 	isOnRoot := folderId == rootDir
 
 	if isOnRoot == false {
+		// Add current folder
 		currentFolder := findFolderById(folderId, folders)
-		buttons = append(buttons, createFolderButton(currentFolder))
+		breadcrumbFolders = append(breadcrumbFolders, currentFolder)
 
+		// Add parent folder chain
 		for isOnRoot == false {
 			currentFolder = findParentFolder(currentFolder, folders)
 
 			isOnRoot = currentFolder == nil || currentFolder.Id == rootDir
 
 			if isOnRoot == false {
-				buttons = append(buttons, createFolderButton(currentFolder))
+				breadcrumbFolders = append(breadcrumbFolders, currentFolder)
 			}
 		}
-
-		for i := len(buttons) - 1; i >= 0; i-- {
-			container.Add(buttons[i])
-		}
 	}
+
+	return breadcrumbFolders
 }
 
 func findParentFolder(folder *folder.Folder, folders *[]folder.Folder) *folder.Folder {
@@ -63,6 +62,19 @@ func findFolderById(folderId string, folders *[]folder.Folder) *folder.Folder {
 	return nil
 }
 
-func createFolderButton(folder *folder.Folder) *widget.Button {
-	return widget.NewButton(folder.Label, nil)
+func addFolderButtons(pathFolders *[]*folder.Folder, container *fyne.Container, changeFolderFn FnStringConsumer) {
+
+	container.Add(widget.NewButtonWithIcon("", theme.HomeIcon(), func() {
+		changeFolderFn(rootDir)
+	}))
+
+	for i := len(*pathFolders) - 1; i >= 0; i-- {
+		container.Add(createFolderButton((*pathFolders)[i], changeFolderFn))
+	}
+}
+
+func createFolderButton(folder *folder.Folder, changeFolderFn FnStringConsumer) *widget.Button {
+	return widget.NewButton(folder.Label, func() {
+		changeFolderFn(folder.Id)
+	})
 }
